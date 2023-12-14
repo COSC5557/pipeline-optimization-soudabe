@@ -40,6 +40,8 @@ def nested_cross_validation(X, y, classifier, param_grid):
     inner_cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
 
     nested_scores = []
+    params_score_pairs = []
+
     for train_idx, test_idx in outer_cv.split(X, y):
         X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
         y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
@@ -47,11 +49,16 @@ def nested_cross_validation(X, y, classifier, param_grid):
         random_search = RandomizedSearchCV(classifier, param_distributions=param_grid, n_iter=10, cv=inner_cv, random_state=42)
         random_search.fit(X_train, y_train)
         best_model = random_search.best_estimator_
+        best_params = random_search.best_params_
 
         nested_score = best_model.score(X_test, y_test)
         nested_scores.append(nested_score)
+        params_score_pairs.append((best_params, nested_score))
 
-    return np.mean(nested_scores)
+    params_score_pairs.sort(key=lambda x: x[1], reverse=True)  # Sort by score
+    best_params = params_score_pairs[0][0]
+
+    return np.mean(nested_scores), best_params
 
 
 def evaluate_default_performance(X, y, classifier):
@@ -94,7 +101,7 @@ if __name__ == "__main__":
         'Random Forest': {
             'preprocessor__num__imputer__strategy': ['mean', 'median'],
             'preprocessor__cat__imputer__strategy': ['most_frequent', 'constant'],
-            'classifier__n_estimators': [100, 300, 500, 800, 1200],  
+            'classifier__n_estimators': [100, 300, 500, 800, 1200],
             'classifier__max_depth': [5, 10, 15, 20, 25, 30, None],
             'classifier__max_features': ['auto', 'sqrt', 'log2'],
             'classifier__min_samples_leaf': [1, 2, 4, 6, 8],
@@ -120,12 +127,13 @@ if __name__ == "__main__":
         results_default[clf_name] = default_score
 
         param_grid = param_grids[clf_name]
-        tuned_score = nested_cross_validation(X, y, classifier, param_grid)
+        tuned_score, tuned_params = nested_cross_validation(X, y, classifier, param_grid)
         results_tuned[clf_name] = tuned_score
 
         print(f"Classifier: {clf_name}")
         print(f"Default Accuracy: {default_score:.4f}")
         print(f"Tuned Accuracy: {tuned_score:.4f}")
+        print(f"Tuned Parameters: {tuned_params}")
         print("---------------------------------------------------------")
 
     labels = list(results_default.keys())
