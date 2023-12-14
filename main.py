@@ -94,12 +94,13 @@ if __name__ == "__main__":
         'Random Forest': {
             'preprocessor__num__imputer__strategy': ['mean', 'median'],
             'preprocessor__cat__imputer__strategy': ['most_frequent', 'constant'],
-            'classifier__n_estimators': [5, 20, 50, 100],
-            'classifier__max_depth': [int(x) for x in np.linspace(10, 120, num=12)],
-            'classifier__max_features': ['auto', 'sqrt'],
-            'classifier__min_samples_leaf': [1, 3, 4],
-            'classifier__min_samples_split': [2, 6, 10],
+            'classifier__n_estimators': [100, 300, 500, 800, 1200],  
+            'classifier__max_depth': [5, 10, 15, 20, 25, 30, None],
+            'classifier__max_features': ['auto', 'sqrt', 'log2'],
+            'classifier__min_samples_leaf': [1, 2, 4, 6, 8],
+            'classifier__min_samples_split': [2, 5, 10, 15, 20],
             'classifier__bootstrap': [True, False],
+            'classifier__criterion': ['gini', 'entropy']
         },
         'K-Nearest Neighbors': {
             'preprocessor__num__imputer__strategy': ['mean', 'median'],
